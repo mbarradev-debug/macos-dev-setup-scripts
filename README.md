@@ -8,7 +8,7 @@ A collection of shell scripts to set up and maintain a macOS (Apple Silicon) dev
 | --- | --- |
 | `mac-setup-base.sh` | Base macOS setup: Xcode Command Line Tools (+ license), Homebrew, Oh My Zsh, Powerlevel10k, Fira Code Nerd Font, and zsh plugins (`zsh-autosuggestions`, `zsh-syntax-highlighting`). |
 | `mac-install-cli-tools.sh` | Installs essential CLI tools: Homebrew, Git, GitHub CLI, nvm + Node.js LTS, Vercel CLI, PostgreSQL client (`psql`), Neovim, tree, tmux, ripgrep, fzf, bat, eza, jq, htop, direnv, Docker CLI, and Watchman. Also drops minimal config files for Neovim (`~/.config/nvim/init.lua`) and tmux (`~/.tmux.conf`). |
-| `mac-setup-lazyvim.sh` | Reproduces the personal LazyVim setup (Neovim + LazyVim starter, `snacks_picker`/`snacks_explorer` extras, pinned plugin versions via `lazy-lock.json`, and the `~/LazyVim-Atajos.md` keybindings cheat sheet). Idempotent; backs up any pre-existing `~/.config/nvim`. |
+| `mac-setup-lazyvim.sh` | Clones [`lazyvim-config`](https://github.com/mbarradev-debug/lazyvim-config) into `~/.config/nvim` and runs its `install.sh` (Neovim, pinned plugin versions, `snacks_picker`/`snacks_explorer` extras, and the `LazyVim-Atajos.md` keybindings cheat sheet symlinked into `$HOME`). Idempotent; backs up any pre-existing `~/.config/nvim` that isn't already that repo. |
 | `mac-install-gui-apps.sh` | Installs GUI applications via Homebrew Cask: editors/IDEs, database/API tools, browsers, communication apps, multimedia/gaming, and utilities. |
 | `mac-setup-ssh-github.sh` | Generates a personal SSH key and configures `~/.ssh/config` for GitHub. |
 | `mac-clone-repos.sh` | Clones a predefined set of work repositories into local folders. |
