@@ -9,6 +9,23 @@ BASE="$HOME"
 FORCAST_DIR="$BASE/forcast"
 DOB_DIR="$BASE/dobvalidator"
 
+# SSH host alias used for work repos (must exist in ~/.ssh/config)
+SSH_HOST="github-work"
+
+# Abort early if the alias isn't configured: ssh would try to resolve
+# "github-work" as a real hostname and every clone would fail.
+if [[ "$(ssh -G "$SSH_HOST" 2>/dev/null | awk '/^hostname /{print $2}')" == "$SSH_HOST" ]]; then
+  echo "The SSH host alias '$SSH_HOST' is not defined in ~/.ssh/config."
+  echo "Add a block like this (with your work key) and run this script again:"
+  echo ""
+  echo "  Host $SSH_HOST"
+  echo "    HostName github.com"
+  echo "    User git"
+  echo "    IdentityFile ~/.ssh/<your-work-key>"
+  echo "    IdentitiesOnly yes"
+  exit 1
+fi
+
 # Descriptive subfolders
 EHIVE_DIR="$FORCAST_DIR/ehive"
 MICROSERVICES_DIR="$FORCAST_DIR/microservices"
@@ -24,12 +41,21 @@ mkdir -p "$DOB_DIR"
 #  Clone function
 # ============================
 
+FAILED=()
+
 clone_repo() {
   local repo_url="$1"
   local target_dir="$2"
 
+  if [ -d "$target_dir/.git" ]; then
+    echo "Already cloned: $target_dir"
+    return
+  fi
+
   echo "Cloning $repo_url -> $target_dir"
-  git clone "$repo_url" "$target_dir"
+  if ! git clone "$repo_url" "$target_dir"; then
+    FAILED+=("$repo_url")
+  fi
 }
 
 # ============================
@@ -79,6 +105,15 @@ clone_repo "git@github-work:Dobprotocol/Doblink.git" \
   "$DOB_DIR/Doblink"
 
 echo "==========================================="
-echo "   All repos were cloned"
-echo "   Base location: $HOME"
-echo "==========================================="
+if [ "${#FAILED[@]}" -eq 0 ]; then
+  echo "   All repos were cloned"
+  echo "   Base location: $HOME"
+  echo "==========================================="
+else
+  echo "   ${#FAILED[@]} repo(s) failed to clone:"
+  for repo in "${FAILED[@]}"; do
+    echo "     - $repo"
+  done
+  echo "==========================================="
+  exit 1
+fi

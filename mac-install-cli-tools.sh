@@ -55,24 +55,31 @@ fi
 # ----------------------------------------------------------
 # 4. nvm (Node.js version manager)
 # ----------------------------------------------------------
-if [ ! -d "$HOME/.nvm" ]; then
+export NVM_DIR="$HOME/.nvm"
+if [ ! -d "$NVM_DIR" ]; then
   echo "Installing nvm..."
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+else
+  echo "nvm is already installed."
+fi
 
-  export NVM_DIR="$HOME/.nvm"
-  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+# Load nvm into this shell (also on re-runs, so npm is available below)
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
+if ! command -v node &> /dev/null; then
   echo "Installing Node.js LTS with nvm..."
   nvm install --lts
   nvm alias default lts/*
 else
-  echo "nvm is already installed."
+  echo "Node.js is already installed ($(node --version))."
 fi
 
 # ----------------------------------------------------------
 # 5. Vercel CLI (deploy your Next.js projects)
 # ----------------------------------------------------------
-if ! command -v vercel &> /dev/null; then
+if ! command -v npm &> /dev/null; then
+  echo "npm not available (nvm/Node.js failed to load). Skipping Vercel CLI."
+elif ! command -v vercel &> /dev/null; then
   echo "Installing Vercel CLI..."
   npm install -g vercel
 else
