@@ -40,7 +40,12 @@ fi
 echo "[+] Checking Xcode license..."
 
 NEEDS_LICENSE=0
-if xcodebuild -license check >/dev/null 2>&1; then
+# xcodebuild only works when the active developer dir is a full Xcode.app;
+# with just the Command Line Tools it always errors, and no license is needed.
+DEVELOPER_DIR_ACTIVE="$(xcode-select -p 2>/dev/null || true)"
+if [[ "${DEVELOPER_DIR_ACTIVE}" != *.app/* ]]; then
+  echo "Active developer dir is the Command Line Tools (${DEVELOPER_DIR_ACTIVE}); no Xcode license needed."
+elif xcodebuild -license check >/dev/null 2>&1; then
   echo "The Xcode license is already accepted."
 else
   echo "The Xcode license is NOT accepted."
@@ -118,6 +123,8 @@ if [[ ! -d "${HOME}/.oh-my-zsh" ]]; then
   echo "[+] Installing Oh My Zsh..."
   export RUNZSH=no
   export CHSH=no
+  # Don't let the installer move our ~/.zshrc (with the Homebrew block) aside
+  export KEEP_ZSHRC=yes
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 else
   echo "[+] Oh My Zsh is already installed."
@@ -233,6 +240,50 @@ fi
 # --------------------------------------------------
 echo "[+] Installing Fira Code Nerd Font Mono..."
 brew install --cask font-fira-code-nerd-font
+
+# On a fresh macOS 27 install the font registry often ignores new files in
+# ~/Library/Fonts until the next login. Registering each file explicitly
+# through CoreText makes them usable right away.
+FONT_FILES=("${HOME}/Library/Fonts"/FiraCodeNerdFont*.ttf)
+
+fonts_registered() {
+  local count
+  count="$(system_profiler SPFontsDataType 2>/dev/null | grep -c "Location: ${HOME}/Library/Fonts/FiraCodeNerdFont")"
+  [[ "${count}" -ge "${#FONT_FILES[@]}" ]]
+}
+
+if fonts_registered; then
+  echo "[+] FiraCode Nerd Font is registered with macOS."
+else
+  echo "[+] macOS hasn't picked up the font files yet. Registering them with CoreText..."
+  REGISTER_JS="$(mktemp -t register-fonts)"
+  cat > "${REGISTER_JS}" <<'EOF'
+ObjC.import("CoreText");
+function run(argv) {
+  // 2 = kCTFontManagerScopeUser. A file may report "already registered"
+  // even when the registry hasn't loaded it; the call still loads it.
+  for (const p of argv) {
+    $.CTFontManagerRegisterFontsForURL($.NSURL.fileURLWithPath(p), 2, null);
+  }
+}
+EOF
+  osascript -l JavaScript "${REGISTER_JS}" "${FONT_FILES[@]}" >/dev/null 2>&1 || true
+  rm -f "${REGISTER_JS}"
+
+  # Registration is asynchronous; give it up to ~30s
+  FONT_OK=0
+  for _ in 1 2 3 4 5 6; do
+    sleep 5
+    if fonts_registered; then FONT_OK=1; break; fi
+  done
+
+  if [[ "${FONT_OK}" -eq 1 ]]; then
+    echo "[+] FiraCode Nerd Font is now registered with macOS."
+  else
+    echo "[!] The font files are in ~/Library/Fonts but macOS doesn't list them yet."
+    echo "    Log out and back in (or restart) before choosing the font in your terminal."
+  fi
+fi
 
 # --------------------------------------------------
 # END

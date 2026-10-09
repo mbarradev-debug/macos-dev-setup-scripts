@@ -8,6 +8,7 @@ echo "  - Editors / IDE / Terminal"
 echo "  - DB / APIs / Docker"
 echo "  - Browsers"
 echo "  - Communication"
+echo "  - Notes / Productivity"
 echo "  - Multimedia / Gaming"
 echo "  - Utilities (Keka, iStat Menus)"
 echo "==========================================="
@@ -30,7 +31,8 @@ fi
 # 0.1) Install Rosetta 2
 # --------------------------------------------------
 echo "[+] Checking Rosetta 2..."
-if /usr/bin/pgrep oahd >/dev/null 2>&1; then
+# oahd only runs on demand, so check that x86_64 binaries actually execute
+if /usr/bin/arch -x86_64 /usr/bin/true >/dev/null 2>&1; then
   echo "Rosetta is already installed."
 else
   echo "[+] Rosetta is not installed. Installing..."
@@ -45,7 +47,6 @@ echo "[+] Installing editors and terminal..."
 
 brew install --cask \
   visual-studio-code \
-  cursor \
   iterm2 \
   jetbrains-toolbox \
   claude \
@@ -80,16 +81,27 @@ brew install --cask \
   zoom || true
 
 # --------------------------------------------------
-# 5) Multimedia / Gaming
+# 5) Notes / Productivity
+# --------------------------------------------------
+echo "[+] Installing notes and productivity apps..."
+
+brew install --cask \
+  notion \
+  obsidian || true
+
+# --------------------------------------------------
+# 6) Multimedia / Gaming
 # --------------------------------------------------
 echo "[+] Installing multimedia and gaming apps..."
 
+# openemu is disabled in Homebrew (fails Gatekeeper); install it manually from openemu.org
 brew install --cask \
-  openemu \
-  vlc || true
+  vlc \
+  cog \
+  spotify || true
 
 # --------------------------------------------------
-# 6) Additional utilities
+# 7) Additional utilities
 # --------------------------------------------------
 echo "[+] Installing utilities..."
 

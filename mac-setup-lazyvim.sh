@@ -17,7 +17,10 @@
 set -e
 
 NVIM_CONFIG="$HOME/.config/nvim"
-REPO_URL="git@github.com:mbarradev-debug/lazyvim-config.git"
+# Clone over HTTPS (public repo, works before any SSH key exists);
+# pushes still go over SSH.
+REPO_URL="https://github.com/mbarradev-debug/lazyvim-config.git"
+PUSH_URL="git@github.com:mbarradev-debug/lazyvim-config.git"
 
 echo "Setting up LazyVim (from $REPO_URL)..."
 echo ""
@@ -43,10 +46,26 @@ fi
 if [ ! -d "$NVIM_CONFIG" ]; then
   echo "Cloning $REPO_URL..."
   git clone "$REPO_URL" "$NVIM_CONFIG"
+  git -C "$NVIM_CONFIG" remote set-url --push origin "$PUSH_URL"
 fi
 
 # ----------------------------------------------------------
-# 3. Delegate to the repo's own bootstrap script (installs
+# 3. tree-sitter CLI (nvim-treesitter needs it to build parsers).
+#    Without it, LazyVim tries to install it through Mason during
+#    the headless plugin sync, races itself ("Package is already
+#    installing") and no parsers get compiled.
+# ----------------------------------------------------------
+if ! command -v tree-sitter &> /dev/null; then
+  if command -v brew &> /dev/null; then
+    echo "Installing tree-sitter CLI..."
+    brew install tree-sitter-cli
+  else
+    echo "Homebrew not found; LazyVim will try to install tree-sitter via Mason."
+  fi
+fi
+
+# ----------------------------------------------------------
+# 4. Delegate to the repo's own bootstrap script (installs
 #    Neovim if needed, syncs plugins, symlinks the cheat sheet)
 # ----------------------------------------------------------
 "$NVIM_CONFIG/install.sh"

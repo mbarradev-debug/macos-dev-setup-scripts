@@ -67,21 +67,24 @@ generate_key_if_missing() {
 }
 
 start_ssh_agent_if_needed() {
-  if ! pgrep -u "${USER}" ssh-agent >/dev/null 2>&1; then
-    info "Starting ssh-agent..."
-    eval "$(ssh-agent -s)"
-  else
-    if [[ -z "${SSH_AUTH_SOCK:-}" ]]; then
-      info "ssh-agent is already running, but SSH_AUTH_SOCK is not set."
-      info "Run 'eval \"\$(ssh-agent -s)\"' if you run into issues."
-    fi
+  # ssh-add -l exits 0 (has keys) or 1 (no keys) when it can reach an agent,
+  # and 2 when it can't. On macOS, launchd provides the agent in Terminal.
+  local rc=0
+  ssh-add -l >/dev/null 2>&1 || rc=$?
+  if [[ "${rc}" -eq 2 ]]; then
+    info "No reachable ssh-agent (SSH_AUTH_SOCK unset or stale). Starting one for this run..."
+    eval "$(ssh-agent -s)" >/dev/null
+    # Only lives for this run; ~/.ssh/config points ssh at the key anyway
+    trap 'ssh-agent -k >/dev/null 2>&1' EXIT
   fi
 }
 
 add_key_to_agent() {
   local key_path="$1"
+  local fingerprint
+  fingerprint="$(ssh-keygen -lf "${key_path}.pub" | awk '{print $2}')"
 
-  if ! ssh-add -l 2>/dev/null | grep -q "${key_path}" || [[ "$(ssh-add -l 2>&1)" == *"The agent has no identities."* ]]; then
+  if ! ssh-add -l 2>/dev/null | grep -qF "${fingerprint}"; then
     info "Adding key to ssh-agent: ${key_path}"
     ssh-add "${key_path}"
   else
