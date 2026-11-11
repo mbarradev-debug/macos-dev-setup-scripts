@@ -12,7 +12,7 @@ A collection of shell scripts to set up and maintain a macOS (Apple Silicon) dev
 | `mac-install-gui-apps.sh` | Installs GUI applications via Homebrew Cask: editors/IDEs, database/API tools, browsers, communication apps, multimedia/gaming, and utilities. |
 | `mac-setup-ssh-github.sh` | Generates a personal SSH key and configures `~/.ssh/config` for GitHub. |
 | `mac-clone-repos.sh` | Clones a predefined set of work repositories into local folders. Requires a `github-work` host alias (with your work key) in `~/.ssh/config`; skips repos already cloned and exits non-zero if any clone fails. |
-| `mac-clean.sh` | Safe nightly cleanup of caches, logs, crash reports, temp files, and package manager caches (Homebrew, npm, yarn, pip, Docker). Logs to `~/Library/Logs/NightlyCleanup`. |
+| `mac-clean.sh` | Safe nightly cleanup, run as your normal user (never sudo) and only inside `~`: Claude Code session history (keeps settings, `CLAUDE.md`, skills, agents, plugins and MCP config; never touches Claude Desktop), Safari/Chrome/Firefox caches (history, cookies and sessions optional), user caches, old logs, crash reports and the Trash, plus opt-in dev caches (npm, pnpm, yarn, Homebrew, `.next/cache`, Xcode DerivedData). Editable allowlist of protected paths, `--dry-run` and `--inventario` modes, logs to `~/Library/Logs/limpieza-nocturna.log`. Schedule it with `launchd/com.mbarra.limpieza-nocturna.plist`. |
 
 ## Usage
 
@@ -32,7 +32,68 @@ Recommended order for a fresh machine:
 5. `mac-setup-ssh-github.sh`
 6. `mac-clone-repos.sh`
 
-`mac-clean.sh` is intended to be run periodically (e.g. via a scheduled `launchd`/cron job).
+`mac-clean.sh` is intended to run nightly via `launchd`. Try it first with `./mac-clean.sh --dry-run`, then copy `launchd/com.mbarra.limpieza-nocturna.plist` to `~/Library/LaunchAgents/` and load it with `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mbarra.limpieza-nocturna.plist`.
+
+## Nightly cleanup (`mac-clean.sh`)
+
+Runs as your normal user (never `sudo`) and only deletes inside `~`. Before removing anything it checks that the path is not empty, is inside your home folder, is not on the protected list, belongs to you and is writable. Anything it cannot remove is logged as skipped and the run continues.
+
+### 1. Configure
+
+Edit the variables at the top of the script:
+
+| Variable | Default | What it does |
+| --- | --- | --- |
+| `BORRAR_HISTORIAL_Y_SESIONES` | `false` | Also delete browser history, cookies and signed-in sessions (passwords, bookmarks and extensions are always kept) |
+| `CERRAR_NAVEGADORES` | `true` | Ask open browsers to quit (like Cmd+Q) before cleaning them |
+| `MINUTOS_INACTIVIDAD_MINIMA` | `15` | On scheduled runs, skip browsers and Claude Code if the Mac was used in the last N minutes |
+| `DIAS_CONSERVAR_CLAUDE` | `0` | Keep Claude Code sessions newer than N days |
+| `DIAS_LOGS` | `7` | Delete user logs older than N days |
+| `LIMPIAR_NPM`, `LIMPIAR_PNPM`, `LIMPIAR_YARN`, `LIMPIAR_HOMEBREW`, `LIMPIAR_NEXT_CACHE`, `LIMPIAR_XCODE_DERIVEDDATA` | `false` | Opt-in dev caches |
+| `LIMPIAR_HOMEBREW_VERSIONES_ANTIGUAS` | `false` | Runs `brew cleanup --prune=all` (the only action outside `~`, done by Homebrew itself) |
+| `DIRECTORIOS_PROYECTOS` | `~/workspace` | Where to look for `.next/cache` folders |
+
+`RUTAS_PROTEGIDAS` (paths never deleted) and `CACHES_EXCLUIDAS` (folders in `~/Library/Caches` that are skipped) are plain lists, one entry per line.
+
+### 2. Test without deleting anything
+
+```bash
+cd ~/scripts
+./mac-clean.sh --inventario   # what is inside ~/.claude and what would happen to each item
+./mac-clean.sh --dry-run      # list everything that would be deleted and the space it would free
+tail -n 40 ~/Library/Logs/limpieza-nocturna.log
+```
+
+Run it for real once by hand with `./mac-clean.sh`.
+
+### 3. Grant permissions
+
+In **System Settings → Privacy & Security**:
+
+- **Full Disk Access**: add your terminal app (Terminal or iTerm) for manual runs, and `/bin/bash` for scheduled runs (click **+**, press Cmd+Shift+G, type `/bin/bash`). Restart the terminal app afterwards. Without it, the Safari cache and the Trash are skipped; everything else still works. Note that granting it to `/bin/bash` applies to every bash script.
+- **Automation**: the first time the script quits a browser, macOS asks whether `bash` may control it. If that happens during the night, approve it in the morning.
+
+### 4. Schedule it (every night at 03:30)
+
+```bash
+cp ~/scripts/launchd/com.mbarra.limpieza-nocturna.plist ~/Library/LaunchAgents/
+plutil -lint ~/Library/LaunchAgents/com.mbarra.limpieza-nocturna.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.mbarra.limpieza-nocturna.plist
+launchctl print gui/$(id -u)/com.mbarra.limpieza-nocturna | grep -E "state|path"
+```
+
+If the Mac is asleep at 03:30, the job runs once when it wakes up; if it is shut down, that night is skipped. Changes to the script apply on the next run; changes to the `.plist` need the job to be reloaded (step 5, then step 4).
+
+### 5. Disable it
+
+```bash
+launchctl bootout gui/$(id -u)/com.mbarra.limpieza-nocturna
+```
+
+### Logs
+
+- `~/Library/Logs/limpieza-nocturna.log`: every run, the space freed and the list of skipped items (rotated at 5 MB).
+- `~/Library/Logs/limpieza-nocturna.launchd.log`: unexpected errors from `launchd` itself.
 
 ## Author
 
