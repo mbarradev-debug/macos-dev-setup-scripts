@@ -13,6 +13,7 @@ A collection of shell scripts to set up and maintain a macOS (Apple Silicon) dev
 | `mac-setup-ssh-github.sh` | Generates a personal SSH key and configures `~/.ssh/config` for GitHub. |
 | `mac-clone-repos.sh` | Clones a predefined set of work repositories into local folders. Requires a `github-work` host alias (with your work key) in `~/.ssh/config`; skips repos already cloned and exits non-zero if any clone fails. |
 | `mac-clean.sh` | Safe nightly cleanup, run as your normal user (never sudo) and only inside `~`: Claude Code session history (keeps settings, `CLAUDE.md`, skills, agents, plugins and MCP config; never touches Claude Desktop), Safari/Chrome/Firefox caches (history, cookies and sessions optional), user caches, old logs, crash reports and the Trash, plus opt-in dev caches (npm, pnpm, yarn, Homebrew, `.next/cache`, Xcode DerivedData). Editable allowlist of protected paths, `--dry-run` and `--inventario` modes, logs to `~/Library/Logs/limpieza-nocturna.log`. Schedule it with `launchd/com.mbarra.limpieza-nocturna.plist`. |
+| `mac-clean-zsh-history.sh` | Keeps `~/.zsh_history` small and useful: drops lines with secrets (tokens, passwords, API keys), huge pasted blobs, trivial commands (`ls`, `clear`, `cd ..`), typos (commands that don't exist on your Mac), duplicates (keeps the most recent) and commands unused for a year, while always keeping the rare-but-essential ones (`ssh`, `git clone`, `docker run`...). Backs up before writing, uses zsh's own lock, `--dry-run` and `--restaurar` modes, and `--instalar-zshrc` adds zsh options that stop the history from filling up again. |
 
 ## Usage
 
@@ -94,6 +95,21 @@ launchctl bootout gui/$(id -u)/com.mbarra.limpieza-nocturna
 
 - `~/Library/Logs/limpieza-nocturna.log`: every run, the space freed and the list of skipped items (rotated at 5 MB).
 - `~/Library/Logs/limpieza-nocturna.launchd.log`: unexpected errors from `launchd` itself.
+
+## Shell history cleanup (`mac-clean-zsh-history.sh`)
+
+Run it whenever the history feels noisy, and install the zsh options once so it stays clean on its own:
+
+```bash
+./mac-clean-zsh-history.sh --dry-run          # see what would be removed, per rule
+./mac-clean-zsh-history.sh                    # clean it (backup in ~/.local/share/zsh-history-backups)
+./mac-clean-zsh-history.sh --instalar-zshrc   # one-time: prevent noise from coming back
+./mac-clean-zsh-history.sh --restaurar        # undo: restore the latest backup
+```
+
+Rules run in this order: secrets → too long → trivial → typos → duplicates → unused for `DIAS_SIN_USO` days → `MAX_ENTRADAS` cap. Anything matching `PATRONES_CONSERVAR` skips every rule except secrets and duplicates. All rules, limits and pattern lists are variables at the top of the script.
+
+After cleaning, close other open terminals (or run `exec zsh` in them) so they don't write their old in-memory history back. Removing a secret from the history does not revoke it: rotate it if it was real.
 
 ## Author
 
