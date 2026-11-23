@@ -282,6 +282,13 @@ else
   echo "Claude Code is already installed."
 fi
 
+# The native installer puts claude in ~/.local/bin, which is not in PATH by default
+if ! grep -qF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc" 2>/dev/null; then
+  echo "Adding ~/.local/bin to PATH in ~/.zshrc..."
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
 echo ""
 echo "Done! Installed tools:"
 echo "   - Homebrew"
