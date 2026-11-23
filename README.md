@@ -25,13 +25,13 @@ chmod +x mac-setup-base.sh
 ./mac-setup-base.sh
 ```
 
-Recommended order for a fresh machine:
+Recommended order for a fresh machine (see [SETUP.md](SETUP.md) for the full step-by-step guide, with prerequisites, restarts and checks):
 
 1. `mac-setup-base.sh`
 2. `mac-install-cli-tools.sh`
-3. `mac-setup-lazyvim.sh`
-4. `mac-install-gui-apps.sh`
-5. `mac-setup-iterm-permissions.sh` (run it from iTerm2; then restart iTerm2 and run it again with `--check`)
+3. `mac-install-gui-apps.sh`
+4. `mac-setup-iterm-permissions.sh` (run it from iTerm2; then restart iTerm2 and run it again with `--check`)
+5. `mac-setup-lazyvim.sh`
 6. `mac-setup-ssh-github.sh`
 7. `mac-clone-repos.sh`
 
