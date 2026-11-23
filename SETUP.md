@@ -10,14 +10,14 @@ Step-by-step order for running the scripts in this repo on a freshly installed m
 | 1 | `mac-setup-base.sh` | Terminal | Admin password | Yes, reopen Terminal |
 | 2 | `mac-install-cli-tools.sh` | Terminal | Step 1 (Homebrew) | Yes, reopen Terminal |
 | 3 | `mac-install-gui-apps.sh` | Terminal | Step 1 (Homebrew) | No |
-| 4 | `mac-setup-iterm-permissions.sh` | **iTerm2** | Step 3 (iTerm2), step 1 (Homebrew) | Yes, quit and reopen iTerm2, then `--check` |
+| 4 | `mac-setup-iterm-permissions.sh` | Any terminal; `--check` in **iTerm2** | Step 3 (iTerm2), step 1 (Homebrew) | Yes, quit and reopen iTerm2, then `--check` |
 | 5 | `mac-setup-lazyvim.sh` | iTerm2 | Step 2 (Neovim, Node) | No |
 | 6 | `mac-setup-ssh-github.sh` | iTerm2 | Step 2 (Git) | No, but add the key to GitHub |
 | 7 | `mac-clone-repos.sh` | iTerm2 | Step 6 + work SSH key | No |
 | 8 | `mac-clean.sh` + `launchd` | iTerm2 | Step 4 (Full Disk Access) | No |
 | 9 | `mac-clean-zsh-history.sh --instalar-zshrc` | iTerm2 | Step 1 (zsh config) | Reopen terminals |
 
-From step 4 on, work in iTerm2: it is the terminal that ends up with the right permissions.
+Step 4 can run from any terminal; only its final `--check` must run in iTerm2. From step 5 on, work in iTerm2: it is the terminal that ends up with the right permissions.
 
 ## Step 0: Get this repo
 
@@ -65,7 +65,7 @@ Done when it prints `GUI apps installation completed.`
 
 ## Step 4: iTerm2 permissions (`mac-setup-iterm-permissions.sh`)
 
-Open **iTerm2** (from now on, use it instead of Terminal) and run:
+Run it from any terminal (Terminal or iTerm2). The permissions are granted to iTerm2 either way, because in each panel you turn on iTerm, not the terminal running the script:
 
 ```bash
 cd ~/scripts
@@ -74,9 +74,10 @@ cd ~/scripts
 
 - Sets up Touch ID for `sudo` (plus `pam-reattach` so it also works inside tmux).
 - Opens Accessibility, App Management, Developer Tools and Full Disk Access one by one; turn iTerm on in each panel and press Enter.
-- When granting Full Disk Access, if macOS offers **Quit & Reopen**, choose **Later** so the script keeps running.
+- When granting Full Disk Access, if macOS offers **Quit & Reopen** and you are running the script from iTerm2, choose **Later** so the script keeps running. From Terminal it doesn't matter.
+- The summary at the end may show `[RECHECK]` rows: verifying needs to read the permissions database, which only a terminal with Full Disk Access can do. That is expected; the real check is the next one.
 
-Then quit iTerm2 (Cmd+Q), open it again and verify:
+Then quit iTerm2 (Cmd+Q) if it was open, open it again and, **from iTerm2**, verify:
 
 ```bash
 ./mac-setup-iterm-permissions.sh --check
