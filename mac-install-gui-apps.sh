@@ -50,7 +50,6 @@ brew install --cask \
   iterm2 \
   jetbrains-toolbox \
   claude \
-  figma \
   linear || true
 
 # --------------------------------------------------
