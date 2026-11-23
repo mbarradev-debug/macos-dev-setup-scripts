@@ -10,7 +10,7 @@ echo "  - Browsers"
 echo "  - Communication"
 echo "  - Notes / Productivity"
 echo "  - Multimedia / Gaming"
-echo "  - Utilities (Keka, iStat Menus)"
+echo "  - Utilities (Keka, KeyboardCleanTool)"
 echo "==========================================="
 
 # --------------------------------------------------
@@ -50,7 +50,6 @@ brew install --cask \
   iterm2 \
   jetbrains-toolbox \
   claude \
-  figma \
   linear || true
 
 # --------------------------------------------------
@@ -97,8 +96,7 @@ echo "[+] Installing multimedia and gaming apps..."
 # openemu is disabled in Homebrew (fails Gatekeeper); install it manually from openemu.org
 brew install --cask \
   vlc \
-  cog \
-  spotify || true
+  cog || true
 
 # --------------------------------------------------
 # 7) Additional utilities
@@ -107,7 +105,6 @@ echo "[+] Installing utilities..."
 
 brew install --cask \
   keka \
-  istat-menus \
   keyboardcleantool || true
 
 # --------------------------------------------------

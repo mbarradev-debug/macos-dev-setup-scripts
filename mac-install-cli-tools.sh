@@ -245,6 +245,50 @@ else
   echo "Watchman is already installed."
 fi
 
+# ----------------------------------------------------------
+# 13. More Homebrew CLI tools
+#     - Dev: uv (Python), xcodegen (Xcode projects), glslang (shaders)
+#     - Media: exiftool, imagemagick, mpv, whisper.cpp
+#     - Apple Silicon monitors: macmon, mactop
+# ----------------------------------------------------------
+for formula in uv xcodegen glslang exiftool imagemagick mpv whisper.cpp macmon mactop; do
+  if ! brew list --formula "$formula" &> /dev/null; then
+    echo "Installing $formula..."
+    brew install "$formula"
+  else
+    echo "$formula is already installed."
+  fi
+done
+
+# ----------------------------------------------------------
+# 14. NestJS CLI (global npm package)
+# ----------------------------------------------------------
+if ! command -v npm &> /dev/null; then
+  echo "npm not available (nvm/Node.js failed to load). Skipping NestJS CLI."
+elif ! command -v nest &> /dev/null; then
+  echo "Installing NestJS CLI..."
+  npm install -g @nestjs/cli
+else
+  echo "NestJS CLI is already installed."
+fi
+
+# ----------------------------------------------------------
+# 15. Claude Code (native installer, goes to ~/.local/bin)
+# ----------------------------------------------------------
+if ! command -v claude &> /dev/null && [ ! -x "$HOME/.local/bin/claude" ]; then
+  echo "Installing Claude Code..."
+  curl -fsSL https://claude.ai/install.sh | bash
+else
+  echo "Claude Code is already installed."
+fi
+
+# The native installer puts claude in ~/.local/bin, which is not in PATH by default
+if ! grep -qF 'export PATH="$HOME/.local/bin:$PATH"' "$HOME/.zshrc" 2>/dev/null; then
+  echo "Adding ~/.local/bin to PATH in ~/.zshrc..."
+  echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$HOME/.zshrc"
+fi
+export PATH="$HOME/.local/bin:$PATH"
+
 echo ""
 echo "Done! Installed tools:"
 echo "   - Homebrew"
@@ -259,5 +303,10 @@ echo "   - tmux (+ minimal config at ~/.tmux.conf, prefix Ctrl-a)"
 echo "   - ripgrep, fzf, bat, eza"
 echo "   - jq, htop, direnv"
 echo "   - Docker CLI, Watchman"
+echo "   - uv, xcodegen, glslang"
+echo "   - exiftool, imagemagick, mpv, whisper.cpp"
+echo "   - macmon, mactop"
+echo "   - NestJS CLI (nest)"
+echo "   - Claude Code (claude)"
 echo ""
 echo "Close and reopen your terminal (or run 'source ~/.zprofile' and 'source ~/.zshrc') for everything to take effect."

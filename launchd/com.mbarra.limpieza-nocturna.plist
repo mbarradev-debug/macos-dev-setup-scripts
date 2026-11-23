@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Nombre único de la tarea (igual al nombre del archivo, sin .plist) -->
+    <key>Label</key>
+    <string>com.mbarra.limpieza-nocturna</string>
+
+    <!-- Qué ejecutar. launchd no entiende "~": las rutas van completas. -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/mbarra/scripts/mac-clean.sh</string>
+    </array>
+
+    <!-- Cuándo: todos los días a las 03:30.
+         Si el Mac está en reposo a esa hora, se ejecuta una vez al despertar.
+         Si está apagado, esa noche se salta. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>3</integer>
+        <key>Minute</key>
+        <integer>30</integer>
+    </dict>
+
+    <!-- No ejecutar al cargar la tarea ni al iniciar sesión -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <!-- Prioridad baja: no compite con lo que estés haciendo -->
+    <key>ProcessType</key>
+    <string>Background</string>
+    <key>LowPriorityIO</key>
+    <true/>
+    <key>Nice</key>
+    <integer>10</integer>
+
+    <!-- La salida normal ya queda en limpieza-nocturna.log; aquí solo errores
+         inesperados del propio bash (ej. el script no existe) -->
+    <key>StandardOutPath</key>
+    <string>/dev/null</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/mbarra/Library/Logs/limpieza-nocturna.launchd.log</string>
+</dict>
+</plist>
